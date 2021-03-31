@@ -20,4 +20,4 @@ SPOTIFY_CLIENT_SECRET=YOUR_SECRET
 
 ## Running
 
-`npm start redman "big l" "the farcyde:"`
+`npm start redman "big l" "the farcyde"`
