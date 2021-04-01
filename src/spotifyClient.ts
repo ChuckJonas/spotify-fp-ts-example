@@ -1,25 +1,20 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { identity } from 'fp-ts';
 import * as E from 'fp-ts/Either';
 import { flow, pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 import * as iot from 'io-ts';
-import { base64Encode } from './utils';
+import { base64Encode, trace } from './utils';
 
-const makeReq = (req: Promise<AxiosResponse<any>>) =>
+const makeReq = (req: () => Promise<AxiosResponse<any>>) =>
   pipe(
-    TE.tryCatch(
-      () => req,
-      (e) => (e instanceof Error ? e : new Error(String(e))),
-    ),
+    TE.tryCatch(req, (e) => (e instanceof Error ? e : new Error(String(e)))),
     TE.map((v) => v.data),
   );
 
-const httpGet = (url: string, config?: AxiosRequestConfig) => {
-  // console.log(url, config);
-  return makeReq(axios.get(url, config));
-};
+export const httpGet = (url: string, config?: AxiosRequestConfig) => makeReq(() => axios.get(url, config));
 
-const httpPost = (url: string, data: any, config?: AxiosRequestConfig) => makeReq(axios.post(url, data, config));
+export const httpPost = (url: string, data: unknown, config?: AxiosRequestConfig) => makeReq(() => axios.post(url, data, config));
 
 const validateJson = <R extends iot.Props>(decoder: iot.TypeC<R>) =>
   flow(
