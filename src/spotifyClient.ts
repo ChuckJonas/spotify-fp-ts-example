@@ -1,24 +1,22 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { identity } from 'fp-ts';
 import * as E from 'fp-ts/Either';
-import { flow, pipe } from 'fp-ts/function';
+import { flow, identity, pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 import * as iot from 'io-ts';
 import { base64Encode, trace } from './utils';
 
-const makeReq = (req: () => Promise<AxiosResponse<any>>) =>
-  pipe(
-    TE.tryCatch(req, (e) => (e instanceof Error ? e : new Error(String(e)))),
-    TE.map((v) => v.data),
-  );
+const makeReq = TE.bimap(
+  (e: unknown) => (e instanceof Error ? e : new Error(String(e))),
+  (v: AxiosResponse): unknown => v.data,
+);
 
-export const httpGet = (url: string, config?: AxiosRequestConfig) => makeReq(() => axios.get(url, config));
+export const httpGet = flow(TE.tryCatchK(axios.get, identity), makeReq);
 
-export const httpPost = (url: string, data: unknown, config?: AxiosRequestConfig) => makeReq(() => axios.post(url, data, config));
+export const httpPost = flow(TE.tryCatchK(axios.post, identity), makeReq);
 
 const validateJson = <R extends iot.Props>(decoder: iot.TypeC<R>) =>
   flow(
-    (json: E.Json) => json,
+    (json: unknown) => json,
     decoder.decode,
     (v) => E.either.map(v, (artist) => artist),
     E.mapLeft((errors) => new Error(errors.map((error) => error.context.map(({ key }) => key).join('.')).join('\n'))),
