@@ -21,3 +21,6 @@ SPOTIFY_CLIENT_SECRET=YOUR_SECRET
 ## Running
 
 `npm start redman "big l" "the farcyde"`
+
+> Artists related to Redman & Big L & The Pharcyde: 
+Jeru The Damaja
